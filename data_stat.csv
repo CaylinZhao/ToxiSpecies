@@ -1,0 +1,49 @@
+Endpoints,Species,Path,Num_Samples,Num_Compounds
+LC50,Artemia salina,{'1.0d'},142,142
+LC50,Lepomis macrochirus,"{'2.0d', '4.0d', '1.0d'}",1189,713
+LC50,Culex quinquefasciatus,{'1.0d'},82,82
+LC50,Brachionus calyciflorus,{'1.0d'},82,82
+LC50,Physella acuta,{'2.0d'},92,92
+LC50,Cyprinus carpio,"{'2.0d', '4.0d'}",255,189
+LC50,Xenopus laevis,{'4.0d'},133,133
+LC50,Poecilia reticulata,"{'2.0d', '4.0d', '1.0d'}",421,238
+LC50,Gammarus fasciatus,"{'4.0d', '1.0d'}",197,110
+LC50,Oryzias latipes,"{'2.0d', '1.0d'}",376,231
+LC50,Pimephales promelas,"{'2.0d', '3.0d', '4.0d', '1.0d'}",1608,938
+LC50,Cipangopaludina malleata,{'2.0d'},91,91
+LC50,Culex pipiens,{'1.0d'},133,133
+LC50,Daphnia magna,"{'2.0d', '4.0d', '1.0d'}",873,620
+LC50,Gambusia affinis,"{'2.0d', '4.0d'}",184,131
+LC50,Aedes aegypti,{'1.0d'},153,153
+LC50,Ictalurus punctatus,"{'4.0d', '1.0d'}",383,231
+LC50,Semisulcospira libertina,{'2.0d'},89,89
+LC50,Americamysis bahia,{'4.0d'},342,342
+LC50,Indoplanorbis exustus,{'2.0d'},90,90
+LC50,Leuciscus idus,{'2.0d'},155,155
+LC50,Danio rerio,"{'2.0d', '4.0d'}",268,203
+LC50,Palaemonetes pugio,{'4.0d'},96,96
+LC50,Carassius auratus,"{'2.0d', '4.0d', '1.0d'}",351,220
+LC50,Rasbora heteromorpha,"{'2.0d', '1.0d'}",180,93
+LC50,Oncorhynchus mykiss,"{'2.0d', '3.0d', '4.0d', '1.0d'}",1416,803
+LC50,Cyprinodon variegatus,{'4.0d'},256,256
+TDLo,women,{'oral'},122,122
+TDLo,human,{'oral'},121,121
+TDLo,man,{'oral'},138,138
+LDLo,cat,"{'intravenous', 'oral'}",276,256
+LDLo,rat,"{'intraperitoneal', 'intravenous', 'oral', 'subcutaneous'}",908,806
+LDLo,dog,"{'intravenous', 'oral'}",495,443
+LDLo,rabbit,"{'skin', 'intravenous', 'oral', 'subcutaneous'}",967,778
+LDLo,frog,{'subcutaneous'},106,106
+LDLo,guinea pig,"{'intravenous', 'subcutaneous'}",277,265
+LDLo,mouse,"{'intraperitoneal', 'intravenous', 'oral', 'subcutaneous'}",846,768
+LD50,mammal (species unspecified),"{'intraperitoneal', 'unreported', 'oral', 'subcutaneous'}",2406,2267
+LD50,cat,"{'intravenous', 'oral'}",404,387
+LD50,rat,"{'intramuscular', 'intraperitoneal', 'unreported', 'skin', 'oral', 'intravenous', 'subcutaneous'}",20581,14085
+LD50,dog,"{'intravenous', 'oral'}",1019,879
+LD50,rabbit,"{'intraperitoneal', 'skin', 'oral', 'intravenous', 'subcutaneous'}",3282,2717
+LD50,quail,{'oral'},347,347
+LD50,chicken,{'oral'},345,345
+LD50,bird-wild,{'oral'},323,323
+LD50,duck,{'oral'},185,185
+LD50,guinea pig,"{'intraperitoneal', 'skin', 'oral', 'intravenous', 'subcutaneous'}",1458,1216
+LD50,mouse,"{'intramuscular', 'unreported', 'intraperitoneal', 'parenteral', 'skin', 'oral', 'intravenous', 'subcutaneous'}",83711,68764
