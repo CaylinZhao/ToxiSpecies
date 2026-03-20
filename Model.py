@@ -16,6 +16,10 @@ import matplotlib.pyplot as plt
 
 
 class MLP(nn.Module):
+    """
+    Multilayer Perceptron (MLP) base model for toxicity regression.
+    Processes molecular fingerprints through several dense and normalization layers.
+    """
     def __init__(self, input_dim, n_hidden_1, n_hidden_2, output_dim, droprate):
         super(MLP, self).__init__()
         self.input_dim = input_dim
@@ -26,33 +30,54 @@ class MLP(nn.Module):
                                        nn.Linear(n_hidden_2, output_dim), nn.BatchNorm1d(output_dim), nn.Dropout(droprate), nn.ReLU(),
                                        nn.Linear(self.output_dim, 1))
 
+        # Weight initialization for better convergence
         for m in self.mlp:
             if isinstance(m, nn.Linear):
                 init.xavier_uniform_(m.weight)
                 init.constant_(m.bias, val=0)
 
     def forward(self, x):
-
+        """Passes input features through the MLP."""
         return self.mlp(x)
 
 
 class FeatureAdapter(nn.Module):
+    """
+    Feature Adapter Layer.
+    Enhances the base model by learning task-specific feature transformations 
+    using an attention-based mechanism coordinate by learnable bank of prototypes 'P'.
+    """
     def __init__(self, in_dim, num_head, temperature):
         super(FeatureAdapter, self).__init__()
         self.num_head = num_head
+        # Bank of prototypes to identify task-specific relevant features
         self.P = nn.Parameter(torch.empty(num_head, in_dim))
         nn.init.kaiming_uniform_(self.P, a=math.sqrt(5))
+        # Parallel transformation heads
         self.heads = nn.ModuleList([nn.Linear(in_dim, in_dim, bias=True) for _ in range(num_head)])
         self.temperature = temperature
 
     def forward(self, x):
+        """
+        Computes a weighted transformation of input features x based on 
+        cosine similarity with learnable prototypes P.
+        """
+        # Calculate similarity between input and each prototype
         s_hat = torch.stack([F.cosine_similarity(x, self.P[i], dim=-1) for i in range(self.num_head)], dim=-1)
+        # Softmax over heads for attention weights
         s = F.softmax(s_hat / self.temperature, dim=-1)
+        # Aggregate transformed features from multi-heads
         weighted_features = sum([s[:, i].unsqueeze(-1) * self.heads[i](x) for i in range(self.num_head)])
+        # Residual connection
         return x + weighted_features
 
 
 class LabelAdapter(nn.Module):
+    """
+    Label Adapter Layer.
+    Dynamically adjusts the output scale/bias of the model to account for 
+    distribution shifts in toxicity values across different species.
+    """
     def __init__(self, x_dim, num_head, temperature, hid_dim):
         super(LabelAdapter, self).__init__()
         self.num_head = num_head
@@ -60,42 +85,57 @@ class LabelAdapter(nn.Module):
         self.P = nn.Parameter(torch.empty(num_head, hid_dim))
         nn.init.kaiming_uniform_(self.P, a=math.sqrt(5))
         self.heads = nn.ModuleList([nn.Linear(1, 1, bias=True) for _ in range(num_head)])
+        # Learnable scaling and bias terms
         self.weight = nn.Parameter(torch.empty(1, num_head))
         self.bias = nn.Parameter(torch.ones(1, num_head) / num_head)
         init.uniform_(self.weight, 0.75, 1.25)
         self.temperature = temperature
 
     def forward(self, x, y, inverse):
+        """
+        Adapts label y based on feature context x.
+        Works in two modes: forward (adapting target for loss) and inverse (mapping prediction back to real scale).
+        """
         v = self.linear(x.reshape(len(x), -1))
+        # Determine adapter weight based on feature context similarity to prototypes
         gate = F.cosine_similarity(v.unsqueeze(1), self.P.unsqueeze(0), dim=-1)
         gate = F.softmax(gate / self.temperature, dim=-1)
 
         if inverse:
+            # Map model output back to original toxicity scale
             adapted_y = (gate * (y.view(-1, 1) - self.bias) / (self.weight + 1e-9)).sum(-1)
         else:
+            # Shift the ground truth label to align with the model's current state during training
             adapted_y = (gate * (self.weight + 1e-9) * y.view(-1, 1) + self.bias).sum(-1)
 
         return adapted_y
 
 
 class DataAdapter(nn.Module):
+    """
+    Meta-Framework Wrapper.
+    Combines the MLP predictor with either a Feature or Label Adapter and 
+    handles the meta-training state (optimizers).
+    """
     def __init__(self, args, Adapter):
         super(DataAdapter, self).__init__()
         self.predictor = MLP(args.input_dim, args.n_hidden_1, args.n_hidden_2, args.output_dim, args.droprate)
         self.FeatureAdapter = FeatureAdapter(args.input_dim, num_head=4, temperature=5)
         self.LabelAdapter = LabelAdapter(args.input_dim, num_head=4, temperature=5, hid_dim=16)
         self.Adapter = Adapter
+        # Optimizer for inner loop (fast adaptation)
         self.optimizer_inner = optim.Adam(self.predictor.parameters(), lr=args.base_lr)
 
+        # Optimizer for outer loop (meta-update)
         if Adapter == 'FeatureAdapter':
             self.optimizer_outer = optim.Adam(list(self.predictor.parameters())+list(self.FeatureAdapter.parameters()), lr=args.meta_lr)
         elif Adapter == 'LabelAdapter':
             self.optimizer_outer = optim.Adam(list(self.predictor.parameters()) + list(self.LabelAdapter.parameters()), lr=args.meta_lr)
 
-        # self.criterion = nn.HuberLoss(delta=1.0)
         self.criterion = nn.MSELoss()
 
     def inner_loop(self, support_x, support_y, inverse=False):
+        """Standard backprop for a single task given a support set."""
         if self.Adapter == 'FeatureAdapter':
             adap_x = self.FeatureAdapter(support_x)
             pred = self.predictor(adap_x)
@@ -105,12 +145,14 @@ class DataAdapter(nn.Module):
 
         elif self.Adapter == 'LabelAdapter':
             pred = self.predictor(support_x)
+            # Adjust ground truth labels for the support set
             adap_y = self.LabelAdapter(support_x, support_y, inverse)
             loss_s = self.criterion(pred.flatten(), adap_y)
             loss_reg = self.criterion(pred.flatten(), support_y)
             return loss_s, loss_reg, pred
 
     def outer_loop(self, query_x, query_y, inverse=True):
+        """Compute the meta-loss on a query set using parameters adapted in the inner loop."""
         if self.Adapter == 'FeatureAdapter':
             adap_x = self.FeatureAdapter(query_x)
             pred = self.predictor(adap_x)
@@ -119,6 +161,7 @@ class DataAdapter(nn.Module):
 
         elif self.Adapter == 'LabelAdapter':
             pred = self.predictor(query_x)
+            # Map prediction back to original scale if needed for evaluation
             pred = self.LabelAdapter(query_x, pred, inverse)
             loss_q = self.criterion(pred.flatten(), query_y)
             return loss_q, pred
