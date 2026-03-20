@@ -17,15 +17,26 @@ from early_stopping import EarlyStopping
 
 
 def train(support_loaders, query_loaders, label_shot, feature_shot, label_valid, feature_valid, model, args, setting, Adapter):
-
+    """
+    Core Meta-Learning Training Loop (MAML approach).
+    
+    Args:
+        support_loaders: Task-specific support sets for inner-loop adaptation.
+        query_loaders: Task-specific query sets for outer-loop meta-update.
+        model: Base neural network with adapter layers.
+        args: Hyperparameters (learning rates, update steps, etc.).
+        Adapter: Type of adapter used (FA or LA).
+    """
     alpha = 0.1
     MAE_min = 100.0
     loss_e_list = []
-    # early_stopping = EarlyStopping(patience=10, delta=0.01, verbose=True, save_path='Models/' + str(Adapter) + '_Setting_' + str(setting) + '.pth')
+    # Loop through meta-episodes (Outer Loop)
     for e in range(args.episodes):
         loss_q_all = 0.0
+        # Iterate over tasks in the current meta-batch
         for t in range(len(support_loaders)):
             loss_reg = 0.0
+            # Inner Loop: Fast adaptation to the specific task 't' using Support Set
             for i in range(args.update_step_inner):
                 for _, batch in enumerate(support_loaders[t]):
                     support_x, support_y = batch[0], batch[1]
