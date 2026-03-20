@@ -46,51 +46,61 @@ def argument():
 
 
 def ensemble(setting, args):
-
+    """
+    Ensemble evaluation using Dual Adapters (FA + LA).
+    
+    This script loads pre-trained FeatureAdapter and LabelAdapter models 
+    to perform joint prediction (averaging) on the test tasks.
+    """
+    # Fix environmental randomness
     torch.manual_seed(args.runseed)
     np.random.seed(args.runseed)
     torch.cuda.manual_seed_all(args.runseed)
 
     adapters = ['FeatureAdapter', 'LabelAdapter']
 
+    # Initialize two instances for both adapter architectures
     model_fa = DataAdapter(args, adapters[0])
     model_la = DataAdapter(args, adapters[1])
 
+    # Perform ensemble testing across all test seeds (20 trials)
     for seed in range(20):
+        # Sample support/query test sets for specific scenario and test seed
         label_tune, feature_tune, label_test, feature_test = data_tune(args.k_shot_test, setting, 'test', seed=seed)
+        # Execute the ensemble testing logic (averaging predictions of FA and LA)
         test_da(label_tune, feature_tune, label_test, feature_test, model_fa, model_la, args, setting, seed)
 
+    # Post-process: Aggregate individual seed CSVs into a final summary result
     df_list = [pd.read_csv('Results/Experiment setting/seeds/DoubleAdapter_Setting_' + str(setting) + '_s' + str(args.runseed) + '_s' + str(seed) + '.csv', index_col=0) for seed in range(20)]
     combined_df = pd.concat(df_list, axis=0)
+    # Group by task and calculate overall mean
     result = combined_df.groupby(combined_df.index).mean()
     result = result.reindex(['R2 score', 'RMSE', 'MAE', 'Pearson', 'Spearman'])
     result = result.round(3)
+    # Final output save
     result.to_csv('Results/Experiment setting/DoubleAdapter_' + str(setting) + '_s' + str(args.runseed) + '.csv')
 
     print('ok')
 
 
+# List of experimental settings to evaluate sequentially
 for setting in ['1_1', '1_2', '2_1', '2_2', '2_3']:
     args = argument()
+    # Scenario-specific task-sampling hyperparameter adjustments
     if setting == '1_1':
         args.k_shot_train = 32
         args.n_q_train = 90
     elif setting == '1_2':
         args.k_shot_train = 48
         args.n_q_train = 108
-    elif setting == '2_1':
-        args.k_shot_train = 33
-        args.n_q_train = 90
-    elif setting == '2_2':
-        args.k_shot_train = 35
-        args.n_q_train = 90
+    #  other settings
     elif setting == '2_3':
         args.k_shot_train = 32
         args.n_q_train = 60
 
+    # Iteratively run ensemble over different model training seeds
     for s in range(5):
         args.runseed = s
         ensemble(setting, args)
-
 
 
