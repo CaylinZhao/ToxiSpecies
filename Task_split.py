@@ -1,18 +1,21 @@
 import pandas as pd
 import numpy as np
 
-dose_tasks = pd.read_csv('Data/Sample_num_dose.csv')  # 59
-concentration_tasks = pd.read_csv('Data/Sample_num_concentration.csv')  # 48
+# Load task lists for dose-based and concentration-based toxicity endpoints
+dose_tasks = pd.read_csv('Data/Sample_num_dose.csv')  # 59 tasks
+concentration_tasks = pd.read_csv('Data/Sample_num_concentration.csv')  # 48 tasks
 tasks_all = pd.concat([dose_tasks, concentration_tasks])
-tasks_all = tasks_all.sort_values(by='number', ascending=False).reset_index(drop=True)  # 107
+# Sort tasks by sample count to ensure consistency across splits
+tasks_all = tasks_all.sort_values(by='number', ascending=False).reset_index(drop=True)  # 107 total
 
 
-# Setting_1_1: Mix all tasks, from head tasks to tail tasks, split rate 8:1:1
+# Scenario 1_1: Mixed all species/endpoints, 8:1:1 split for generalization testing
 print('Setting_1_1')
 tasks_train = tasks_all.iloc[0:int(0.8*len(tasks_all)), :]
 tasks_tail = tasks_all.iloc[int(0.8*len(tasks_all)):, :]
 tasks_valid = tasks_tail.sample(frac=0.5, random_state=0)
 tasks_test = tasks_tail.drop(tasks_valid.index, axis=0)
+# Save split metadata for reproducibility
 tasks_train.to_csv('Data/3.Task split/Setting_1_1/tasks_train.csv', index=False)
 tasks_valid.to_csv('Data/3.Task split/Setting_1_1/tasks_valid.csv', index=False)
 tasks_test.to_csv('Data/3.Task split/Setting_1_1/tasks_test.csv', index=False)
@@ -232,32 +235,6 @@ data_test.to_csv('Data/3.Task split/Setting_2_3/data_test.csv', index=False)
 
 print('Sample num 2_3:', len(data_train), ':', len(data_valid), ':', len(data_test))
 print('Chemical 2_3:', len(data_train['Canonical SMILES'].unique()), ':', len(data_valid['Canonical SMILES'].unique()), ':', len(data_test['Canonical SMILES'].unique()))
-
-
-# Setting_2_4: ：Same species and endpoints, different conditions, i.e. LD50 in different routes of rodent animals
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
