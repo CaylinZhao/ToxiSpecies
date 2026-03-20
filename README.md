@@ -1,6 +1,7 @@
 # ToxiSpecies: Meta-Learning for Multi-Species Molecular Toxicity Prediction
 
-ToxiSpecies is a deep learning framework based on **Meta-Learning** designed for predicting molecular toxicity across diverse species (e.g., from rats to humans) and different experimental endpoints. It addresses the challenge of data heterogeneity and scarcity by utilizing **Feature Adapter (FA)** and **Label Adapter (LA)** mechanisms, enabling accurate toxicity prediction with limited samples (Few-shot learning). This codebase supports the reproducibility of results presented in our manuscript submitted to **JCIM**.
+ToxiSpecies is a deep learning framework based on **Meta-Learning** designed for predicting molecular toxicity across diverse species (e.g., from rats to humans) and different experimental endpoints. It addresses the challenge of data heterogeneity and scarcity by utilizing **Feature Adapter (FA)** and **Label Adapter (LA)** mechanisms, enabling accurate toxicity prediction with limited samples (Few-shot learning).
+
 
 ## 📁 Repository Structure
 
