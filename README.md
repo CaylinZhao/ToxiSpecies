@@ -30,7 +30,8 @@ In the label-adaptation setting, the model also performs a task-specific label t
 
 ## Repository Layout
 
-- `Data/3.Task split/`: task-level data split used for the benchmark
+- `Concentration data.csv`: raw concentration data
+- `Dose data.csv`: raw dose data
 - `Sampler.py`: task and episode sampling utilities
 - `Train.py`: training and evaluation workflow
 - `Main_FA.py`, `Main_LA.py`, `Ensemble_DA.py`: entry points for the core ToxiSpecies models
@@ -75,11 +76,16 @@ If your environment already contains these versions, you can reuse it directly.
 
 ## Data
 
-The benchmark data are organized under `Data/3.Task split/`. The task-level benchmark statistics are summarized in Table S1 of the manuscript.
+This GitHub upload includes the two raw data tables used to build the benchmark:
+
+- `Concentration data.csv`
+- `Dose data.csv`
+
+The task-split files under `Data/3.Task split/` are not included in this upload because they are too large. If you need the exact benchmark split used in the manuscript, please generate it locally from the raw data or use the original split preparation pipeline.
 
 Important note:
 
-- the repository expects the task split files to be present under `Data/3.Task split/`
+- the repository expects the task split files to be created or provided locally before running training and testing
 - most scripts read and write relative to the project root
 
 ## Quick Start
